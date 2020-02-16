@@ -13,7 +13,7 @@ include_directories(${GTK_INCLUDE_DIRS})
 link_directories(${GTK_LIBRARY_DIRS})
 add_definitions(${GTK_CFLAGS_OTHER})
 
-add_executable(CODECC main.c)
+add_executable(CODECC main.c gtkFunctions.c codecFunctions.c)
 
 
 target_link_libraries(CODECC LINK_PUBLIC ${GTK_LIBRARIES})

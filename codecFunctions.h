@@ -1,0 +1,8 @@
+//
+// Created by Unknow on 16/02/2020.
+//
+
+#ifndef CODECC_CODECFUNCTIONS_H
+#define CODECC_CODECFUNCTIONS_H
+
+#endif //CODECC_CODECFUNCTIONS_H
