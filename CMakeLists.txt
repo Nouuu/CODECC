@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.1)
 project(CODECC LANGUAGES C)
 enable_language(C)
 
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 99)
 set(CMAKE_LINK_SEARCH_START_STATIC TRUE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc")
 set(CMAKE_C_FLAGS -Werror)
+#set(CMAKE_C_FLAGS -Wall)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK REQUIRED gtk+-3.0)

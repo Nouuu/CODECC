@@ -3,8 +3,10 @@
 #include <windows.h>
 
 #include "gtkFunctions.h"
+#include "functions.h"
 
 char *gladeFile = "../window.glade";
+
 
 int main(int argc, char **argv) {
     int showConsole = 1;
@@ -17,6 +19,7 @@ int main(int argc, char **argv) {
         ShowWindow(hWnd, SW_HIDE);
     }
 */
+    fillC2B();
 
     startGTK(&argc, &argv, gladeFile);
 
