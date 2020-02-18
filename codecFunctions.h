@@ -9,6 +9,7 @@
 #include <io.h>
 #include <stdbool.h>
 #include <time.h>
+#include <pthread.h>
 
 
 char codecKey[4][8];
@@ -25,6 +26,8 @@ int fillMatrixDecode();
 int encode();
 
 int decode();
+
+void *worker(void *arg);
 
 
 #endif //CODECC_CODECFUNCTIONS_H

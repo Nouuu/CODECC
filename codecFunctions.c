@@ -6,8 +6,16 @@
 #include "gtkFunctions.h"
 #include "functions.h"
 
+
 bool codecKeyLoaded = FALSE;
 extern char *filePath;
+unsigned char *readBuffer = NULL;
+int readBufferSize;
+unsigned char *writeBuffer = NULL;
+int writeBufferSize;
+int ZERO = 0;
+int ONE = 1;
+
 
 int readKey(const char *path) {
     int i;
@@ -130,11 +138,7 @@ int encode() {
     size_t size = _telli64(fileDS);
     _lseeki64(fileDS, 0, SEEK_SET);
     size_t size2 = size;
-    unsigned char *readBuffer;
-    int readBufferSize;
-    unsigned char *writeBuffer;
-    int writeBufferSize;
-    int i;
+    pthread_t threads[2];
 
     if (size2 >= 10485760) {
         readBufferSize = 10485760;
@@ -152,30 +156,30 @@ int encode() {
                 free(writeBuffer);
                 return 1;
             }
-            for (i = 0; i < readBufferSize; i++) {
-                writeBuffer[i * 2] = encodeMatrix[readBuffer[i]][0];
-                writeBuffer[i * 2 + 1] = encodeMatrix[readBuffer[i]][1];
-            }
+
+            pthread_create(threads, NULL, worker, &ZERO);
+            pthread_create(threads + 1, NULL, worker, &ONE);
+
+            pthread_join(threads[0], NULL);
+            pthread_join(threads[1], NULL);
+
 //            fwrite(writeBuffer, sizeof(char), 20971520, dest);
             if (_write(fileDD, writeBuffer, writeBufferSize) != writeBufferSize) {
                 updateStatus("Error while encoding, on writing buffer 10485760*2");
                 fclose(fp);
                 fclose(dest);
-                free(readBuffer);
-                free(writeBuffer);
                 return 1;
             }
 
         }
-        free(readBuffer);
-        free(writeBuffer);
+
     }
 
     if (size2 >= 1048576) {
         readBufferSize = 1048576;
         writeBufferSize = readBufferSize * 2;
-        readBuffer = malloc(readBufferSize);
-        writeBuffer = malloc(writeBufferSize);
+        readBuffer = realloc(readBuffer, readBufferSize);
+        writeBuffer = realloc(writeBuffer, writeBufferSize);
         while (size2 >= readBufferSize) {
             size2 -= readBufferSize;
 //            fread(readBuffer, sizeof(char), readBufferSize, fp);
@@ -187,10 +191,11 @@ int encode() {
                 free(writeBuffer);
                 return 1;
             }
-            for (i = 0; i < readBufferSize; i++) {
-                writeBuffer[i * 2] = encodeMatrix[readBuffer[i]][0];
-                writeBuffer[i * 2 + 1] = encodeMatrix[readBuffer[i]][1];
-            }
+            pthread_create(threads, NULL, worker, &ZERO);
+            pthread_create(threads + 1, NULL, worker, &ONE);
+
+            pthread_join(threads[0], NULL);
+            pthread_join(threads[1], NULL);
 //            fwrite(writeBuffer, sizeof(char), writeBufferSize, dest);
             if (_write(fileDD, writeBuffer, writeBufferSize) != writeBufferSize) {
                 updateStatus("Error while encoding, on writing buffer 1048576*2");
@@ -201,15 +206,13 @@ int encode() {
                 return 1;
             }
         }
-        free(readBuffer);
-        free(writeBuffer);
     }
 
     if (size2 >= 1024) {
         readBufferSize = 1024;
         writeBufferSize = readBufferSize * 2;
-        readBuffer = malloc(readBufferSize);
-        writeBuffer = malloc(writeBufferSize);
+        readBuffer = realloc(readBuffer, readBufferSize);
+        writeBuffer = realloc(writeBuffer, writeBufferSize);
         while (size2 >= readBufferSize) {
             size2 -= readBufferSize;
 //            fread(readBuffer, sizeof(char), readBufferSize, fp);
@@ -222,10 +225,11 @@ int encode() {
                 return 1;
             }
 
-            for (i = 0; i < readBufferSize; i++) {
-                writeBuffer[i * 2] = encodeMatrix[readBuffer[i]][0];
-                writeBuffer[i * 2 + 1] = encodeMatrix[readBuffer[i]][1];
-            }
+            pthread_create(threads, NULL, worker, &ZERO);
+            pthread_create(threads + 1, NULL, worker, &ONE);
+
+            pthread_join(threads[0], NULL);
+            pthread_join(threads[1], NULL);
 //            fwrite(writeBuffer, sizeof(char), writeBufferSize, dest);
             if (_write(fileDD, writeBuffer, writeBufferSize) != writeBufferSize) {
                 updateStatus("Error while encoding, on writing buffer 1024*2");
@@ -237,15 +241,13 @@ int encode() {
             }
 
         }
-        free(readBuffer);
-        free(writeBuffer);
     }
 
 
     readBufferSize = 1;
     writeBufferSize = readBufferSize * 2;
-    readBuffer = malloc(readBufferSize);
-    writeBuffer = malloc(writeBufferSize);
+    readBuffer = realloc(readBuffer, readBufferSize);
+    writeBuffer = realloc(writeBuffer, writeBufferSize);
 
     while (_read(fileDS, readBuffer, readBufferSize) == readBufferSize) {
         writeBuffer[0] = encodeMatrix[*readBuffer][0];
@@ -311,10 +313,6 @@ int decode() {
     size_t size = _telli64(fileDS);
     _lseeki64(fileDS, 0, SEEK_SET);
     size_t size2 = size;
-    unsigned char *readBuffer;
-    int readBufferSize;
-    unsigned char *writeBuffer;
-    int writeBufferSize;
     int i;
 
     if (size2 > 20971520) {
@@ -443,4 +441,12 @@ int decode() {
     fclose(fp);
     fclose(dest);
     return 0;
+}
+
+void *worker(void *arg) {
+    int *inc = (int *) arg;
+    for (int i = 0; i < readBufferSize; ++i) {
+        writeBuffer[i * 2 + *inc] = encodeMatrix[readBuffer[i]][0];
+    }
+    return (NULL);
 }
