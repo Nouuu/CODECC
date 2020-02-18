@@ -5,30 +5,40 @@
 #include "gtkFunctions.h"
 #include "codecFunctions.h"
 
+extern bool codecKeyLoaded;
+char *filePath = NULL;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void on_keyChooserButton_file_set() {
     char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(widgets->keyChooserButton));
-    printf("Key set : %s\n", gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(widgets->keyChooserButton)));
-    readKey(path);
+    updateStatus("Building encode/decode matrix...");
+    levelBarSetValue(0.);
+    setSpinnerStatus(TRUE);
+    codecKeyLoaded = !readKey(path);
+    setSpinnerStatus(FALSE);
+    codecKeyLoaded ? updateStatus("Key loaded, encode/decode matrix loaded") : NULL;
+
 }
 
 void on_fileChooserButton_file_set() {
-    printf("File set : %s\n", gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(widgets->fileChooserButton)));
+    filePath = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(widgets->fileChooserButton));
 }
 
 void on_encodeButton_clicked() {
-    printf("Encode\n");
     updateStatus("Encoding...");
+    levelBarSetValue(0.);
     setSpinnerStatus(TRUE);
-    levelBarSetValue(0.76);
+    encode();
+    setSpinnerStatus(FALSE);
 }
 
 void on_decodeButton_clicked() {
-    printf("Decode\n");
-    updateStatus("Decoding");
+    updateStatus("Decoding...");
+    levelBarSetValue(0.);
+    setSpinnerStatus(TRUE);
+    decode();
     setSpinnerStatus(FALSE);
-    levelBarSetValue(0.86);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,4 +89,8 @@ void levelBarSetValue(double value) {
 
 void updateStatus(const char *message) {
     gtk_label_set_text(widgets->statusLabel, message);
+}
+
+void GTKEncode() {
+
 }
