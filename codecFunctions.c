@@ -47,7 +47,6 @@ int fillMatrixEncode() {
 
     for (i = 0; i < 256; ++i) {
         //c2b[i];
-        levelBarSetValue(i / 512);
         for (j = 0; j < 8; ++j) {
             array1[j] = (c2b[i][0] && codecKey[0][j]) ^ (c2b[i][1] && codecKey[1][j]) ^ (c2b[i][2] && codecKey[2][j]) ^
                         (c2b[i][3] && codecKey[3][j]);
@@ -124,6 +123,45 @@ int encode() {
         return 1;
     }
 
+    fseek(fp, 0, SEEK_END);
+    size_t size = _ftelli64(fp);
+    fseek(fp, 0, SEEK_SET);
+    size_t size2 = size;
+    unsigned char *readBuffer;
+    unsigned char *writeBuffer;
+    int i;
+
+    if (size2 > 1048576) {
+        readBuffer = malloc(1048576);
+        writeBuffer = malloc(2097152);
+        while (size2 > 1048576) {
+            size2 -= 1048576;
+            fread(readBuffer, sizeof(char), 1048576, fp);
+            for (i = 0; i < 1048576; i++) {
+                writeBuffer[i * 2] = encodeMatrix[readBuffer[i]][0];
+                writeBuffer[i * 2 + 1] = encodeMatrix[readBuffer[i]][1];
+            }
+            fwrite(writeBuffer, sizeof(char), 2097152, dest);
+        }
+        free(readBuffer);
+        free(writeBuffer);
+    }
+
+    if (size2 > 1024) {
+        readBuffer = malloc(1024);
+        writeBuffer = malloc(2048);
+        while (size2 > 1024) {
+            size2 -= 1024;
+            fread(readBuffer, sizeof(char), 1024, fp);
+            for (i = 0; i < 1024; i++) {
+                writeBuffer[i * 2] = encodeMatrix[readBuffer[i]][0];
+                writeBuffer[i * 2 + 1] = encodeMatrix[readBuffer[i]][1];
+            }
+            fwrite(writeBuffer, sizeof(char), 2048, dest);
+        }
+        free(readBuffer);
+        free(writeBuffer);
+    }
 
     int byte;
     while ((byte = fgetc(fp)) != EOF) {
@@ -131,14 +169,15 @@ int encode() {
         fputc(encodeMatrix[byte][1], dest);
     }
 
-    size_t size = ftell(fp);
 
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     fileSize fileSize1 = readableFileSize(size);
+    fileSize fileSize2 = readableFileSize(size * 2);
     char message[255];
-    sprintf(message, "File encoded ! Encoding time: %lf seconds, source size : %d %s", cpu_time_used, fileSize1.size,
-            fileSize1.unit);
+    sprintf(message, "File encoded ! Encoding time: %lf seconds, source size : %.2lf %s, dest size : %.2lf %s",
+            cpu_time_used,
+            fileSize1.size, fileSize1.unit, fileSize2.size, fileSize2.unit);
     updateStatus(message);
     levelBarSetValue(1.);
     fclose(fp);

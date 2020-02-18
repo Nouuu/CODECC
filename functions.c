@@ -21,7 +21,7 @@ void fillC2B() {
 
 unsigned char b2C(const char *value) {
     unsigned char result = 0;
-    int i;
+    char i;
     for (i = 0; i < 8; i++) {
         result += value[7 - i] * pow(2, i);
     }
@@ -36,7 +36,7 @@ fileSize readableFileSize(long double size) {
         size /= 1024;
         i++;
     }
-    fileSize1.size = (int)size;
+    fileSize1.size = (double) size;
     strcpy(fileSize1.unit, units[i]);
     return fileSize1;
 }

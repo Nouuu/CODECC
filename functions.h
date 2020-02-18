@@ -10,7 +10,7 @@
 #include <math.h>
 
 typedef struct {
-    int size;
+    double size;
     char unit[3];
 } fileSize;
 
