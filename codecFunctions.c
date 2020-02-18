@@ -301,56 +301,139 @@ int decode() {
     FILE *dest = fopen(destPath, "wb");
     if (dest == NULL) {
         updateStatus("Can't create new file !");
+        fclose(fp);
         return 1;
     }
 
-    _fseeki64(fp, 0, SEEK_END);
-    size_t size = _ftelli64(fp);
-    _fseeki64(fp, 0, SEEK_SET);
+    int fileDS = fileno(fp);
+    int fileDD = fileno(dest);
+    _lseeki64(fileDS, 0, SEEK_END);
+    size_t size = _telli64(fileDS);
+    _lseeki64(fileDS, 0, SEEK_SET);
     size_t size2 = size;
     unsigned char *readBuffer;
+    int readBufferSize;
     unsigned char *writeBuffer;
+    int writeBufferSize;
     int i;
 
-    if (size2 > 2097152) {
-        readBuffer = malloc(2097152);
-        writeBuffer = malloc(1048576);
-        while (size2 > 2097152) {
-            size2 -= 2097152;
-            fread(readBuffer, sizeof(char), 2097152, fp);
-            for (i = 0; i < 1048576; i++) {
+    if (size2 > 20971520) {
+        readBufferSize = 20971520;
+        writeBufferSize = readBufferSize / 2;
+        readBuffer = malloc(readBufferSize);
+        writeBuffer = malloc(writeBufferSize);
+        while (size2 >= readBufferSize) {
+            size2 -= readBufferSize;
+//            fread(readBuffer, sizeof(char), readBufferSize, fp);
+            if (_read(fileDS, readBuffer, readBufferSize) != readBufferSize) {
+                updateStatus("Error while decoding, on reading buffer 20971520");
+                fclose(fp);
+                fclose(dest);
+                free(readBuffer);
+                free(writeBuffer);
+                return 1;
+            }
+            for (i = 0; i < writeBufferSize; i++) {
                 writeBuffer[i] = decodeMatrix[readBuffer[i * 2]][readBuffer[i * 2 + 1]];
             }
-            fwrite(writeBuffer, sizeof(char), 1048576, dest);
+//            fwrite(writeBuffer, sizeof(char), 1048576, dest);
+            if (_write(fileDD, writeBuffer, writeBufferSize) != writeBufferSize) {
+                updateStatus("Error while encoding, on writing buffer 20971520/2");
+                fclose(fp);
+                fclose(dest);
+                free(readBuffer);
+                free(writeBuffer);
+                return 1;
+            }
+        }
+        free(readBuffer);
+        free(writeBuffer);
+    }
+
+    if (size2 > 2097152) {
+        readBufferSize = 2097152;
+        writeBufferSize = readBufferSize / 2;
+        readBuffer = malloc(readBufferSize);
+        writeBuffer = malloc(writeBufferSize);
+        while (size2 >= readBufferSize) {
+            size2 -= readBufferSize;
+//            fread(readBuffer, sizeof(char), readBufferSize, fp);
+            if (_read(fileDS, readBuffer, readBufferSize) != readBufferSize) {
+                updateStatus("Error while decoding, on reading buffer 2097152");
+                fclose(fp);
+                fclose(dest);
+                free(readBuffer);
+                free(writeBuffer);
+                return 1;
+            }
+            for (i = 0; i < writeBufferSize; i++) {
+                writeBuffer[i] = decodeMatrix[readBuffer[i * 2]][readBuffer[i * 2 + 1]];
+            }
+//            fwrite(writeBuffer, sizeof(char), 1048576, dest);
+            if (_write(fileDD, writeBuffer, writeBufferSize) != writeBufferSize) {
+                updateStatus("Error while encoding, on writing buffer 2097152/2");
+                fclose(fp);
+                fclose(dest);
+                free(readBuffer);
+                free(writeBuffer);
+                return 1;
+            }
         }
         free(readBuffer);
         free(writeBuffer);
     }
 
     if (size2 > 2048) {
-        readBuffer = malloc(2048);
-        writeBuffer = malloc(1024);
-        while (size2 > 2048) {
-            size2 -= 2048;
-            fread(readBuffer, sizeof(char), 2048, fp);
-            for (i = 0; i < 1024; i++) {
+        readBufferSize = 2048;
+        writeBufferSize = readBufferSize / 2;
+        readBuffer = malloc(readBufferSize);
+        writeBuffer = malloc(writeBufferSize);
+        while (size2 >= readBufferSize) {
+            size2 -= readBufferSize;
+//            fread(readBuffer, sizeof(char), readBufferSize, fp);
+            if (_read(fileDS, readBuffer, readBufferSize) != readBufferSize) {
+                updateStatus("Error while decoding, on reading buffer 2048");
+                fclose(fp);
+                fclose(dest);
+                free(readBuffer);
+                free(writeBuffer);
+                return 1;
+            }
+            for (i = 0; i < writeBufferSize; i++) {
                 writeBuffer[i] = decodeMatrix[readBuffer[i * 2]][readBuffer[i * 2 + 1]];
             }
-            fwrite(writeBuffer, sizeof(char), 1024, dest);
+//            fwrite(writeBuffer, sizeof(char), 1048576, dest);
+            if (_write(fileDD, writeBuffer, writeBufferSize) != writeBufferSize) {
+                updateStatus("Error while encoding, on writing buffer 2048/2");
+                fclose(fp);
+                fclose(dest);
+                free(readBuffer);
+                free(writeBuffer);
+                return 1;
+            }
         }
         free(readBuffer);
         free(writeBuffer);
     }
 
-    int byte1, byte2;
-    while ((byte1 = fgetc(fp)) != EOF && (byte2 = fgetc(fp)) != EOF) {
-        fputc(decodeMatrix[byte1][byte2], dest);
+
+    readBufferSize = 2;
+    readBuffer = malloc(readBufferSize);
+
+    while (_read(fileDS, readBuffer, readBufferSize) == readBufferSize) {
+        if (_write(fileDD, &decodeMatrix[readBuffer[0]][readBuffer[1]], readBufferSize / 2) != readBufferSize / 2) {
+            updateStatus("Error while encoding, on writing buffer 1*2");
+            fclose(fp);
+            fclose(dest);
+            free(readBuffer);
+            return 1;
+        }
     }
 
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     fileSize fileSize1 = readableFileSize(size);
-    fileSize fileSize2 = readableFileSize(size / 2);
+    fileSize fileSize2 = readableFileSize(_telli64(fileDD));
     char message[255];
     sprintf(message, "File decoded ! Decoding time: %lf seconds, source size : %.2lf %s, dest size : %.2lf %s",
             cpu_time_used,
