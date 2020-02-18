@@ -184,3 +184,87 @@ int encode() {
     fclose(dest);
     return 0;
 }
+
+int decode() {
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
+    if (filePath == NULL || strlen(filePath) == 0) {
+        updateStatus("File input empty !");
+        return 1;
+    }
+    if (!codecKeyLoaded) {
+        updateStatus("Key not loaded !");
+        return 1;
+    }
+    char *destPath = malloc(strlen(filePath) + 2);
+    strcat(strcpy(destPath, filePath), "d");
+
+    FILE *fp = fopen(filePath, "rb");
+    if (fp == NULL) {
+        updateStatus("Can't open file !");
+        return 1;
+    }
+    FILE *dest = fopen(destPath, "wb");
+    if (dest == NULL) {
+        updateStatus("Can't create new file !");
+        return 1;
+    }
+
+    _fseeki64(fp, 0, SEEK_END);
+    size_t size = _ftelli64(fp);
+    _fseeki64(fp, 0, SEEK_SET);
+    size_t size2 = size;
+    unsigned char *readBuffer;
+    unsigned char *writeBuffer;
+    int i;
+
+    if (size2 > 2097152) {
+        readBuffer = malloc(2097152);
+        writeBuffer = malloc(1048576);
+        while (size2 > 2097152) {
+            size2 -= 2097152;
+            fread(readBuffer, sizeof(char), 2097152, fp);
+            for (i = 0; i < 1048576; i++) {
+                writeBuffer[i] = decodeMatrix[readBuffer[i * 2]][readBuffer[i * 2 + 1]];
+            }
+            fwrite(writeBuffer, sizeof(char), 1048576, dest);
+        }
+        free(readBuffer);
+        free(writeBuffer);
+    }
+
+    if (size2 > 2048) {
+        readBuffer = malloc(2048);
+        writeBuffer = malloc(1024);
+        while (size2 > 2048) {
+            size2 -= 2048;
+            fread(readBuffer, sizeof(char), 2048, fp);
+            for (i = 0; i < 1024; i++) {
+                writeBuffer[i] = decodeMatrix[readBuffer[i * 2]][readBuffer[i * 2 + 1]];
+            }
+            fwrite(writeBuffer, sizeof(char), 1024, dest);
+        }
+        free(readBuffer);
+        free(writeBuffer);
+    }
+
+    int byte1, byte2;
+    while ((byte1 = fgetc(fp)) != EOF && (byte2 = fgetc(fp)) != EOF) {
+        fputc(decodeMatrix[byte1][byte2], dest);
+    }
+
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    fileSize fileSize1 = readableFileSize(size);
+    fileSize fileSize2 = readableFileSize(size / 2);
+    char message[255];
+    sprintf(message, "File decoded ! Decoding time: %lf seconds, source size : %.2lf %s, dest size : %.2lf %s",
+            cpu_time_used,
+            fileSize1.size, fileSize1.unit, fileSize2.size, fileSize2.unit);
+    updateStatus(message);
+    levelBarSetValue(1.);
+    fclose(fp);
+    fclose(dest);
+    return 0;
+}

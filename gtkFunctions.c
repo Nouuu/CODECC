@@ -26,7 +26,6 @@ void on_fileChooserButton_file_set() {
 }
 
 void on_encodeButton_clicked() {
-    printf("Encode\n");
     updateStatus("Encoding...");
     levelBarSetValue(0.);
     setSpinnerStatus(TRUE);
@@ -35,10 +34,11 @@ void on_encodeButton_clicked() {
 }
 
 void on_decodeButton_clicked() {
-    printf("Decode\n");
     updateStatus("Decoding...");
+    levelBarSetValue(0.);
+    setSpinnerStatus(TRUE);
+    decode();
     setSpinnerStatus(FALSE);
-    levelBarSetValue(0.86);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

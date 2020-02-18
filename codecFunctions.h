@@ -24,6 +24,7 @@ int fillMatrixDecode();
 
 int encode();
 
+int decode();
 
 
 #endif //CODECC_CODECFUNCTIONS_H
