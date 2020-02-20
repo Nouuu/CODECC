@@ -352,7 +352,7 @@ int decode() {
 void *worker(void *arg) {
     int *inc = (int *) arg;
     for (int i = 0; i < readBufferSize; ++i) {
-        writeBuffer[i * 2 + *inc] = encodeMatrix[readBuffer[i]][0];
+        writeBuffer[i * 2 + *inc] = encodeMatrix[readBuffer[i]][0 + *inc];
     }
     return (NULL);
 }
