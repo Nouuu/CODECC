@@ -4,7 +4,7 @@
 #include "gtkFunctions.h"
 #include "functions.h"
 
-char *gladeFile = "../window.glade";
+char *gladeFile = "../build/window.glade";
 
 
 int main(int argc, char **argv) {
