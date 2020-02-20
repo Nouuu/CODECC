@@ -137,6 +137,8 @@ int encode() {
     fseek(fp, 0, SEEK_SET);
     size_t size2 = size;
     pthread_t threads[2];
+    readBuffer = malloc(1);
+    writeBuffer = malloc(1);
 
     if (size2 >= 10485760) {
         readBufferSize = 10485760;
@@ -206,8 +208,8 @@ int encode() {
     writeBuffer = realloc(writeBuffer, writeBufferSize);
 
     while (fread(readBuffer, 1, readBufferSize, fp) == readBufferSize) {
-        writeBuffer[0] = encodeMatrix[*readBuffer][0];
-        writeBuffer[1] = encodeMatrix[*readBuffer][1];
+        writeBuffer[0] = encodeMatrix[readBuffer[0]][0];
+        writeBuffer[1] = encodeMatrix[readBuffer[0]][1];
         assert(fwrite(writeBuffer, 1, writeBufferSize, dest) == writeBufferSize);
     }
 
@@ -262,13 +264,15 @@ int decode() {
     size_t size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
     size_t size2 = size;
+    writeBuffer = malloc(1);
+    readBuffer = malloc(1);
     int i;
 
     if (size2 > 20971520) {
         readBufferSize = 20971520;
         writeBufferSize = readBufferSize / 2;
-        readBuffer = malloc(readBufferSize);
-        writeBuffer = malloc(writeBufferSize);
+        readBuffer = realloc(readBuffer, readBufferSize);
+        writeBuffer = realloc(writeBuffer, writeBufferSize);
         while (size2 >= readBufferSize) {
             size2 -= readBufferSize;
 
@@ -280,15 +284,13 @@ int decode() {
 
             assert(fwrite(writeBuffer, 1, writeBufferSize, dest) == writeBufferSize);
         }
-        free(readBuffer);
-        free(writeBuffer);
     }
 
     if (size2 > 2097152) {
         readBufferSize = 2097152;
         writeBufferSize = readBufferSize / 2;
-        readBuffer = malloc(readBufferSize);
-        writeBuffer = malloc(writeBufferSize);
+        readBuffer = realloc(readBuffer, readBufferSize);
+        writeBuffer = realloc(writeBuffer, writeBufferSize);
         while (size2 >= readBufferSize) {
             size2 -= readBufferSize;
 
@@ -300,15 +302,13 @@ int decode() {
 
             assert(fwrite(writeBuffer, 1, writeBufferSize, dest) == writeBufferSize);
         }
-        free(readBuffer);
-        free(writeBuffer);
     }
 
     if (size2 > 2048) {
         readBufferSize = 2048;
         writeBufferSize = readBufferSize / 2;
-        readBuffer = malloc(readBufferSize);
-        writeBuffer = malloc(writeBufferSize);
+        readBuffer = realloc(readBuffer, readBufferSize);
+        writeBuffer = realloc(writeBuffer, writeBufferSize);
         while (size2 >= readBufferSize) {
             size2 -= readBufferSize;
 
@@ -320,17 +320,16 @@ int decode() {
 
             assert(fwrite(writeBuffer, 1, writeBufferSize, dest) == writeBufferSize);
         }
-        free(readBuffer);
-        free(writeBuffer);
+
     }
 
 
     readBufferSize = 2;
     writeBufferSize = readBufferSize / 2;
-    readBuffer = malloc(readBufferSize);
+    readBuffer = realloc(readBuffer, readBufferSize);
 
-    while (fread(&readBuffer, 1, readBufferSize, fp) == readBufferSize) {
-        assert(fwrite(writeBuffer, 1, writeBufferSize, dest) == writeBufferSize);
+    while (fread(readBuffer, 1, readBufferSize, fp) == readBufferSize) {
+        assert(fwrite(&decodeMatrix[readBuffer[0]][readBuffer[1]], 1, writeBufferSize, dest) == writeBufferSize);
     }
 
     end = clock();
@@ -343,6 +342,8 @@ int decode() {
             fileSize1.size, fileSize1.unit, fileSize2.size, fileSize2.unit);
     updateStatus(message);
     levelBarSetValue(1.);
+    free(readBuffer);
+    free(writeBuffer);
     fclose(fp);
     fclose(dest);
     return 0;
