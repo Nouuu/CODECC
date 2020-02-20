@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <pthread.h>
+#include <assert.h>
 
 
 char codecKey[4][8];

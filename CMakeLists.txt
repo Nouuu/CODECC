@@ -14,4 +14,6 @@ add_executable(CODECC main.c gtkFunctions.c codecFunctions.c functions.c)
 
 TARGET_LINK_LIBRARIES(CODECC ${GTK3_LIBRARIES})
 
+target_compile_options(CODECC PRIVATE -Werror)
+set_target_properties(CODECC PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
 #set_target_properties(CODECC PROPERTIES LINK_FLAGS "-static")
