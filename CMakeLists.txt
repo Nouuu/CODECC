@@ -3,18 +3,15 @@ project(CODECC LANGUAGES C)
 enable_language(C)
 
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_LINK_SEARCH_START_STATIC TRUE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc")
-set(CMAKE_C_FLAGS -Werror)
-#set(CMAKE_C_FLAGS -Wall)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK REQUIRED gtk+-3.0)
-include_directories(${GTK_INCLUDE_DIRS})
-link_directories(${GTK_LIBRARY_DIRS})
-add_definitions(${GTK_CFLAGS_OTHER})
+FIND_PACKAGE(PkgConfig REQUIRED)
+PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
+INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
+LINK_DIRECTORIES(${GTK3_LIBRARY_DIRS})
+ADD_DEFINITIONS(${GTK3_CFLAGS_OTHER})
 
 add_executable(CODECC main.c gtkFunctions.c codecFunctions.c functions.c)
 
+TARGET_LINK_LIBRARIES(CODECC ${GTK3_LIBRARIES})
 
-target_link_libraries(CODECC LINK_PUBLIC ${GTK_LIBRARIES})
+#set_target_properties(CODECC PROPERTIES LINK_FLAGS "-static")

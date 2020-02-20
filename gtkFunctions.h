@@ -6,7 +6,6 @@
 #define CODECC_GTKFUNCTIONS_H
 
 #include <gtk-3.0/gtk/gtk.h>
-
 #include "codecFunctions.h"
 
 GtkBuilder *builder;
