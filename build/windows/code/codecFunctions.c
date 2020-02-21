@@ -132,9 +132,9 @@ int encode() {
         return 1;
     }
 
-    assert(!fseek(fp, 0, SEEK_END));
-    size_t size = ftell(fp);
-    assert(!fseek(fp, 0, SEEK_SET));
+    assert(!_fseeki64(fp, 0, SEEK_END));
+    size_t size = _ftelli64(fp);
+    assert(!_fseeki64(fp, 0, SEEK_SET));
     size_t size2 = size;
     pthread_t threads[2];
     readBuffer = malloc(1);
@@ -219,7 +219,7 @@ int encode() {
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     fileSize fileSize1 = readableFileSize(size);
-    fileSize fileSize2 = readableFileSize(ftell(dest));
+    fileSize fileSize2 = readableFileSize(_ftelli64(dest));
     char message[255];
     sprintf(message, "File encoded ! Encoding time: %lf seconds, source size : %.2lf %s, dest size : %.2lf %s",
             cpu_time_used,
@@ -258,9 +258,9 @@ int decode() {
         return 1;
     }
 
-    fseek(fp, 0, SEEK_END);
-    size_t size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
+    _fseeki64(fp, 0, SEEK_END);
+    size_t size = _ftelli64(fp);
+    _fseeki64(fp, 0, SEEK_SET);
     size_t size2 = size;
     writeBuffer = malloc(1);
     readBuffer = malloc(1);
@@ -333,7 +333,7 @@ int decode() {
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     fileSize fileSize1 = readableFileSize(size);
-    fileSize fileSize2 = readableFileSize(ftell(dest));
+    fileSize fileSize2 = readableFileSize(_ftelli64(dest));
     char message[255];
     sprintf(message, "File decoded ! Decoding time: %lf seconds, source size : %.2lf %s, dest size : %.2lf %s",
             cpu_time_used,
