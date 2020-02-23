@@ -132,9 +132,17 @@ int encode() {
         return 1;
     }
 
+#ifdef _WIN64
+    assert(!_fseeki64(fp, 0, SEEK_END));
+    size_t size = _ftelli64(fp);
+    assert(!_fseeki64(fp, 0, SEEK_SET));
+#elif __linux__
     assert(!fseek(fp, 0, SEEK_END));
     size_t size = ftell(fp);
     assert(!fseek(fp, 0, SEEK_SET));
+#else
+#error You need to compile on Linux or Windows 64bits
+#endif
     size_t size2 = size;
     pthread_t threads[2];
     readBuffer = malloc(1);
@@ -219,7 +227,13 @@ int encode() {
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     fileSize fileSize1 = readableFileSize(size);
+#ifdef _WIN64
+    fileSize fileSize2 = readableFileSize(_ftelli64(dest));
+#elif __linux__
     fileSize fileSize2 = readableFileSize(ftell(dest));
+#else
+#error You need to compile on Linux or Windows 64bits
+#endif
     char message[255];
     sprintf(message, "File encoded ! Encoding time: %lf seconds, source size : %.2lf %s, dest size : %.2lf %s",
             cpu_time_used,
@@ -258,9 +272,17 @@ int decode() {
         return 1;
     }
 
-    fseek(fp, 0, SEEK_END);
+#ifdef _WIN64
+    assert(!_fseeki64(fp, 0, SEEK_END));
+    size_t size = _ftelli64(fp);
+    assert(!_fseeki64(fp, 0, SEEK_SET));
+#elif __linux__
+    assert(!fseek(fp, 0, SEEK_END));
     size_t size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
+    assert(!fseek(fp, 0, SEEK_SET));
+#else
+#error You need to compile on Linux or Windows 64bits
+#endif
     size_t size2 = size;
     writeBuffer = malloc(1);
     readBuffer = malloc(1);
@@ -333,7 +355,13 @@ int decode() {
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     fileSize fileSize1 = readableFileSize(size);
+#ifdef _WIN64
+    fileSize fileSize2 = readableFileSize(_ftelli64(dest));
+#elif __linux__
     fileSize fileSize2 = readableFileSize(ftell(dest));
+#else
+#error You need to compile on Linux or Windows 64bits
+#endif
     char message[255];
     sprintf(message, "File decoded ! Decoding time: %lf seconds, source size : %.2lf %s, dest size : %.2lf %s",
             cpu_time_used,
