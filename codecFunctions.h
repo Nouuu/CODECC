@@ -27,7 +27,9 @@ int encode();
 
 int decode();
 
-void *worker(void *arg);
+void *worker1();
+
+void *worker2();
 
 
 #endif //CODECC_CODECFUNCTIONS_H

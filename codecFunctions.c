@@ -13,9 +13,6 @@ unsigned char *readBuffer = NULL;
 size_t readBufferSize;
 unsigned char *writeBuffer = NULL;
 size_t writeBufferSize;
-int ZERO = 0;
-int ONE = 1;
-
 
 int readKey(const char *path) {
     int i;
@@ -51,7 +48,6 @@ int readKey(const char *path) {
 int fillMatrixEncode() {
     char array1[8], array2[8];
     int i, j;
-
 
     for (i = 0; i < 256; ++i) {
         //c2b[i];
@@ -100,7 +96,6 @@ int fillMatrixDecode() {
             }
             decodeMatrix[i][j] = b2C(byte);
         }
-        levelBarSetValue((i + 256.) / 512.);
     }
     return 0;
 }
@@ -158,8 +153,8 @@ int encode() {
 
             assert(fread(readBuffer, 1, readBufferSize, fp) == readBufferSize);
 
-            pthread_create(threads, NULL, worker, &ZERO);
-            pthread_create(threads + 1, NULL, worker, &ONE);
+            pthread_create(threads, NULL, worker1, NULL);
+            pthread_create(threads + 1, NULL, worker2, NULL);
 
             pthread_join(threads[0], NULL);
             pthread_join(threads[1], NULL);
@@ -179,8 +174,8 @@ int encode() {
 
             assert(fread(readBuffer, 1, readBufferSize, fp) == readBufferSize);
 
-            pthread_create(threads, NULL, worker, &ZERO);
-            pthread_create(threads + 1, NULL, worker, &ONE);
+            pthread_create(threads, NULL, worker1, NULL);
+            pthread_create(threads + 1, NULL, worker2, NULL);
 
             pthread_join(threads[0], NULL);
             pthread_join(threads[1], NULL);
@@ -199,8 +194,8 @@ int encode() {
 
             assert(fread(readBuffer, 1, readBufferSize, fp) == readBufferSize);
 
-            pthread_create(threads, NULL, worker, &ZERO);
-            pthread_create(threads + 1, NULL, worker, &ONE);
+            pthread_create(threads, NULL, worker1, NULL);
+            pthread_create(threads + 1, NULL, worker2, NULL);
 
             pthread_join(threads[0], NULL);
             pthread_join(threads[1], NULL);
@@ -375,10 +370,16 @@ int decode() {
     return 0;
 }
 
-void *worker(void *arg) {
-    int *inc = (int *) arg;
+void *worker1() {
     for (int i = 0; i < readBufferSize; ++i) {
-        writeBuffer[i * 2 + *inc] = encodeMatrix[readBuffer[i]][0 + *inc];
+        writeBuffer[i * 2] = encodeMatrix[readBuffer[i]][0];
+    }
+    return (NULL);
+}
+
+void *worker2() {
+    for (int i = 0; i < readBufferSize; ++i) {
+        writeBuffer[i * 2 + 1] = encodeMatrix[readBuffer[i]][1];
     }
     return (NULL);
 }
