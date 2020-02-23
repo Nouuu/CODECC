@@ -13,9 +13,6 @@ unsigned char *readBuffer = NULL;
 size_t readBufferSize;
 unsigned char *writeBuffer = NULL;
 size_t writeBufferSize;
-int ZERO = 0;
-int ONE = 1;
-
 
 int readKey(const char *path) {
     int i;
@@ -51,7 +48,6 @@ int readKey(const char *path) {
 int fillMatrixEncode() {
     char array1[8], array2[8];
     int i, j;
-
 
     for (i = 0; i < 256; ++i) {
         //c2b[i];
@@ -100,7 +96,6 @@ int fillMatrixDecode() {
             }
             decodeMatrix[i][j] = b2C(byte);
         }
-        levelBarSetValue((i + 256.) / 512.);
     }
     return 0;
 }
@@ -132,9 +127,17 @@ int encode() {
         return 1;
     }
 
+#ifdef _WIN64
+    assert(!_fseeki64(fp, 0, SEEK_END));
+    size_t size = _ftelli64(fp);
+    assert(!_fseeki64(fp, 0, SEEK_SET));
+#elif __linux__
     assert(!fseek(fp, 0, SEEK_END));
     size_t size = ftell(fp);
     assert(!fseek(fp, 0, SEEK_SET));
+#else
+#error You need to compile on Linux or Windows 64bits
+#endif
     size_t size2 = size;
     pthread_t threads[2];
     readBuffer = malloc(1);
@@ -150,8 +153,8 @@ int encode() {
 
             assert(fread(readBuffer, 1, readBufferSize, fp) == readBufferSize);
 
-            pthread_create(threads, NULL, worker, &ZERO);
-            pthread_create(threads + 1, NULL, worker, &ONE);
+            pthread_create(threads, NULL, worker1, NULL);
+            pthread_create(threads + 1, NULL, worker2, NULL);
 
             pthread_join(threads[0], NULL);
             pthread_join(threads[1], NULL);
@@ -171,8 +174,8 @@ int encode() {
 
             assert(fread(readBuffer, 1, readBufferSize, fp) == readBufferSize);
 
-            pthread_create(threads, NULL, worker, &ZERO);
-            pthread_create(threads + 1, NULL, worker, &ONE);
+            pthread_create(threads, NULL, worker1, NULL);
+            pthread_create(threads + 1, NULL, worker2, NULL);
 
             pthread_join(threads[0], NULL);
             pthread_join(threads[1], NULL);
@@ -191,8 +194,8 @@ int encode() {
 
             assert(fread(readBuffer, 1, readBufferSize, fp) == readBufferSize);
 
-            pthread_create(threads, NULL, worker, &ZERO);
-            pthread_create(threads + 1, NULL, worker, &ONE);
+            pthread_create(threads, NULL, worker1, NULL);
+            pthread_create(threads + 1, NULL, worker2, NULL);
 
             pthread_join(threads[0], NULL);
             pthread_join(threads[1], NULL);
@@ -219,7 +222,13 @@ int encode() {
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     fileSize fileSize1 = readableFileSize(size);
+#ifdef _WIN64
+    fileSize fileSize2 = readableFileSize(_ftelli64(dest));
+#elif __linux__
     fileSize fileSize2 = readableFileSize(ftell(dest));
+#else
+#error You need to compile on Linux or Windows 64bits
+#endif
     char message[255];
     sprintf(message, "File encoded ! Encoding time: %lf seconds, source size : %.2lf %s, dest size : %.2lf %s",
             cpu_time_used,
@@ -258,9 +267,17 @@ int decode() {
         return 1;
     }
 
-    fseek(fp, 0, SEEK_END);
+#ifdef _WIN64
+    assert(!_fseeki64(fp, 0, SEEK_END));
+    size_t size = _ftelli64(fp);
+    assert(!_fseeki64(fp, 0, SEEK_SET));
+#elif __linux__
+    assert(!fseek(fp, 0, SEEK_END));
     size_t size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
+    assert(!fseek(fp, 0, SEEK_SET));
+#else
+#error You need to compile on Linux or Windows 64bits
+#endif
     size_t size2 = size;
     writeBuffer = malloc(1);
     readBuffer = malloc(1);
@@ -333,7 +350,13 @@ int decode() {
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     fileSize fileSize1 = readableFileSize(size);
+#ifdef _WIN64
+    fileSize fileSize2 = readableFileSize(_ftelli64(dest));
+#elif __linux__
     fileSize fileSize2 = readableFileSize(ftell(dest));
+#else
+#error You need to compile on Linux or Windows 64bits
+#endif
     char message[255];
     sprintf(message, "File decoded ! Decoding time: %lf seconds, source size : %.2lf %s, dest size : %.2lf %s",
             cpu_time_used,
@@ -347,10 +370,16 @@ int decode() {
     return 0;
 }
 
-void *worker(void *arg) {
-    int *inc = (int *) arg;
+void *worker1() {
     for (int i = 0; i < readBufferSize; ++i) {
-        writeBuffer[i * 2 + *inc] = encodeMatrix[readBuffer[i]][0 + *inc];
+        writeBuffer[i * 2] = encodeMatrix[readBuffer[i]][0];
+    }
+    return (NULL);
+}
+
+void *worker2() {
+    for (int i = 0; i < readBufferSize; ++i) {
+        writeBuffer[i * 2 + 1] = encodeMatrix[readBuffer[i]][1];
     }
     return (NULL);
 }
