@@ -14,6 +14,7 @@ typedef struct {
     char unit[3];
 } fileSize;
 
+// Decimal to byte array
 char c2b[256][8];
 
 void fillC2B();

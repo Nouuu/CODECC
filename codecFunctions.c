@@ -1,11 +1,6 @@
-//
-// Created by Unknow on 16/02/2020.
-//
-
 #include "codecFunctions.h"
 #include "gtkFunctions.h"
 #include "functions.h"
-
 
 bool codecKeyLoaded = FALSE;
 extern char *filePath;
@@ -14,25 +9,34 @@ size_t readBufferSize;
 unsigned char *writeBuffer = NULL;
 size_t writeBufferSize;
 
+// Read key from file and fille the codecKey[4][8] array
 int readKey(const char *path) {
     int i;
     char c1[9], c2[9], c3[9], c4[9];
+
+    // Open the file
     FILE *fp = fopen(path, "rb");
     if (fp == NULL) {
-        updateStatus("Cannot open key file !");
+        updateStatus("Cannot open key file!");
         return 1;
     }
+
+    // Fill the string values
+    // TODO: pourquoi %[01] ?
     if (fscanf(fp, "G4C=[%[01] %[01] %[01] %[01]]", c1, c2, c3, c4) != 4) {
-        updateStatus("Incorrect key file !");
-        fclose(fp);
-        return 1;
-    }
-    if (strlen(c1) != 8 || strlen(c2) != 8 || strlen(c3) != 8 || strlen(c4) != 8) {
-        updateStatus("Incorrect key file !");
+        updateStatus("Incorrect key file!");
         fclose(fp);
         return 1;
     }
 
+    // Check number of characters in byte strings
+    if (strlen(c1) != 8 || strlen(c2) != 8 || strlen(c3) != 8 || strlen(c4) != 8) {
+        updateStatus("Incorrect key file!");
+        fclose(fp);
+        return 1;
+    }
+
+    // Fill the codecKey array
     for (i = 0; i < 8; ++i) {
         codecKey[0][i] = c1[i] == '1' ? 1 : 0;
         codecKey[1][i] = c2[i] == '1' ? 1 : 0;
@@ -40,17 +44,21 @@ int readKey(const char *path) {
         codecKey[3][i] = c4[i] == '1' ? 1 : 0;
     }
 
-
     fclose(fp);
+
+    // Fill the encode and decode matrices
     return fillMatrixEncode() || fillMatrixDecode();
 }
 
+// Fill encodeMatrix[256][2] with all the possibilities
+// TODO: possibilities
 int fillMatrixEncode() {
     char array1[8], array2[8];
     int i, j;
 
     for (i = 0; i < 256; ++i) {
         //c2b[i];
+        // XOR, equivalent to a matrix product
         for (j = 0; j < 8; ++j) {
             array1[j] = (c2b[i][0] && codecKey[0][j]) ^ (c2b[i][1] && codecKey[1][j]) ^ (c2b[i][2] && codecKey[2][j]) ^
                         (c2b[i][3] && codecKey[3][j]);
@@ -64,6 +72,7 @@ int fillMatrixEncode() {
     return 0;
 }
 
+// Fill decodeMatrix[256][2] with all the possibilities
 int fillMatrixDecode() {
     setSpinnerStatus(TRUE);
     levelBarSetValue(0.);
@@ -104,25 +113,34 @@ int encode() {
     clock_t start, end;
     double cpu_time_used;
     start = clock();
+
+    // Check if there's a file to encode
     if (filePath == NULL || strlen(filePath) == 0) {
-        updateStatus("File input empty !");
+        updateStatus("File input empty!");
         return 1;
     }
+
+    // Check if there's a key
     if (!codecKeyLoaded) {
-        updateStatus("Key not loaded !");
+        updateStatus("Key not loaded!");
         return 1;
     }
+
+    // Create destination path (sourcePath + "e")
     char *destPath = malloc(strlen(filePath) + 2);
     strcat(strcpy(destPath, filePath), "e");
 
+    // Open the file to encode
     FILE *fp = fopen(filePath, "rb");
     if (fp == NULL) {
         updateStatus("Can't open file !");
         return 1;
     }
+
+    // Create the new encoded file
     FILE *dest = fopen(destPath, "wb");
     if (dest == NULL) {
-        updateStatus("Can't create new file !");
+        updateStatus("Can't create new file!");
         fclose(fp);
         return 1;
     }
@@ -204,7 +222,6 @@ int encode() {
         }
     }
 
-
     readBufferSize = 1;
     writeBufferSize = readBufferSize * 2;
     readBuffer = realloc(readBuffer, readBufferSize);
@@ -244,25 +261,34 @@ int decode() {
     clock_t start, end;
     double cpu_time_used;
     start = clock();
+
+    // Check if there's a file to decode
     if (filePath == NULL || strlen(filePath) == 0) {
-        updateStatus("File input empty !");
+        updateStatus("File input empty!");
         return 1;
     }
+
+    // Check if there's a key
     if (!codecKeyLoaded) {
         updateStatus("Key not loaded !");
         return 1;
     }
+
+    // Create destination path (sourcePath + "d")
     char *destPath = malloc(strlen(filePath) + 2);
     strcat(strcpy(destPath, filePath), "d");
 
+    // Open the file to decode
     FILE *fp = fopen(filePath, "rb");
     if (fp == NULL) {
-        updateStatus("Can't open file !");
+        updateStatus("Can't open file!");
         return 1;
     }
+
+    // Create the new decoded file
     FILE *dest = fopen(destPath, "wb");
     if (dest == NULL) {
-        updateStatus("Can't create new file !");
+        updateStatus("Can't create new file!");
         fclose(fp);
         return 1;
     }
@@ -337,7 +363,6 @@ int decode() {
         }
 
     }
-
 
     readBufferSize = 2;
     writeBufferSize = readBufferSize / 2;

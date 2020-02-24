@@ -1,10 +1,7 @@
-//
-// Created by Unknow on 16/02/2020.
-//
-
 #include "functions.h"
 #include "gtkFunctions.h"
 
+// Generate a decimal to binary translation table
 void fillC2B() {
     int i;
     unsigned char j, byte;
@@ -19,6 +16,7 @@ void fillC2B() {
     }
 }
 
+// Translate binary to decimal
 unsigned char b2C(const char *value) {
     unsigned char result = 0;
     char i;
@@ -28,6 +26,7 @@ unsigned char b2C(const char *value) {
     return result;
 }
 
+// Return file with proper unit
 fileSize readableFileSize(long double size) {
     int i = 0;
     char units[9][3] = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
