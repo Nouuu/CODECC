@@ -52,7 +52,7 @@ one byte expressed with 8 bits) which we will load from a text file in this form
 #### Encoding
 
 We will process the file we want to encode byte per byte by making a
-matrix product with our encoding matrix like this:
+matrix product with our encoding matrix:
 
 - Our matrix: `G4C=[10001111 11000111 10100100 10010010]`
 - Our byte: `1010 0101`
@@ -67,7 +67,7 @@ Then, we make a matrix product: in the program, it is actually a **XOR** between
 
 Result: `10100101` is coded as `00101011 01010101`  
 As we see, one input byte generates an output of two encoded bytes: this means that
-our encoded output file will be twice bigger than the input one.
+our encoded output file will be twice bigger than the input source file.
 
 #### Decoding
 
@@ -81,7 +81,7 @@ The first step is to find the identity matrix in our G4C matrix columns:
 |:--------------------------------------------------------------------------------:|:-------------:|:--------------------------------------------:|
 | 1**000** **1**111<br>1**100** **0**111<br>1**010** **0**100<br>1**001** **0**010 | :arrow_right: | **1**000<br>0**1**00<br>00**1**0<br>000**1** |
 
-Once we've identified the identity columns, we save their position: here, it's **(5-2-3-4)**.  
+Once we've identified the identity columns, we save their positions: here, it's **(5-2-3-4)**.  
 Back to our previously encoded byte that generated these two bytes: `00101011 01010101`.
 For each of these two encoded bytes, we will select the bits located at the 5th, 2nd, 3rd and 4th position,
 and then concatenate them to get back to a 8-bits decoded byte.
@@ -170,11 +170,11 @@ During the build, if some libraries are not found, go to the folder
 
 ## Code: how the program works
 
-### Loading key
+### Loading the key
 
 First of all, we need to load our key otherwise the program won't start
 the encoding / decoding process.  
-The key must be in valid format, we will store it in a local array `char
+The key must be in valid format and will be stored in a local array `char
 codecKey[4][8]`.
 
 The function `int readKey(const char *path)` in `codecFunction.c` opens the
@@ -216,9 +216,8 @@ Then, it stores the key in our `codecKey[4][8]` array:
 During the encoding process, we don't want to process each byte of the file with the
 [encoding](#encoding) method.  
 If we think about it, there are only 256 possible values for a byte (0 to 255), and each
-input byte will give two encoded bytes in the output.  
-So, to speed the process, we will fill a local array `unsigned char encodeMatrix[256][2]` with
-all the possibilities.  
+input byte will give two encoded bytes in the output: to speed the process,
+we will fill a local array `unsigned char encodeMatrix[256][2]` with all the possibilities.  
 Then, in our encoding process, we just access the correct index of the
 array which is the value of the byte!
 
@@ -247,10 +246,8 @@ int fillMatrixEncode() {
 As we see, we process with a XOR function because a matrix product
 between bits is the same as XOR.
 
-This `int fillMatrixEncode()` function is called as soon as a key is selected
-to speed.
 
-### Fill decoding matrix table
+### Fill the decoding matrix table
 
 As for the encoding process, we don't want to process each byte of the file with the
 [decoding](#decoding) method during the decoding process.  
@@ -309,8 +306,8 @@ continue:
 }
 ```
 
-As we see, wee fill our two dimensional array with all the
-possibilities, depending of our identity matrix.
+As we see, we fill our two dimensional array with all the
+possibilities, depending on our identity matrix.
 
 ### File encoding process
 
