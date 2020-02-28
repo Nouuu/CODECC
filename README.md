@@ -36,16 +36,15 @@ This application is G4C Matrix encryption program developed in C.
 
 ### Features
 
-| Feature     | Description                                   |
-|:------------|:----------------------------------------------|
-| Encode file | Encode the give file the the given G4C Matrix |
-| Decode file | Encode the give file the the given G4C Matrix |
+| Feature     | Description                           |
+|:------------|:--------------------------------------|
+| Encode file | Encode a file with a given G4C Matrix |
+| Decode file | Encode a file with a given G4C Matrix |
 
-### How it works
+### How it works: the theory
 
-Basically, we will use a G4C encoding matrix (matrix of 4 lines each
-containing the value of one bytes expressed in 8 bits) which we will
-load from a text file in this format :
+We will use a G4C encoding matrix (matrix of 4 lines, each containing the value of
+one byte expressed with 8 bits) which we will load from a text file in this format:
 
 `G4C=[10001111 11000111 10100100 10010010]`
 
@@ -55,108 +54,104 @@ load from a text file in this format :
 We will process the file we want to encode byte per byte by making a
 matrix product with our encoding matrix like this:
 
-- Our matrix : `G4C=[10001111 11000111 10100100 10010010]`
-- Our byte : `1010 0101`
+- Our matrix: `G4C=[10001111 11000111 10100100 10010010]`
+- Our byte: `1010 0101`
 
-We separate our byte in two parts : `1010` and `0101`
-
-And we make a matrix product (in this case this like we do a **XOR**
-between the byte and the matrix)
+First, as we have a 4-line encoding matrix, we separate our byte in two 4-bit parts: `1010` and `0101`.
+Then, we make a matrix product: in the program, it is actually a **XOR** between the byte and the matrix.
 
 | Byte / Matrix |               | 1000 1111<br>1100 0111<br>1010 0100<br>1001 0010 |
 |:-------------:|:-------------:|:-------------------------------------------------|
 |     1010      | :arrow_right: | 0010 1011                                        |
 |     0101      | :arrow_right: | 0101 0101                                        |
 
-Result : `1010 0101` => `0010 1011 0101 0101`  
-So as we see, we have one byte in input and we get 2 encoded byte at the
-output.  
-That mean our output file will be twice bigger than the input one.
+Result: `10100101` is coded as `00101011 01010101`  
+As we see, one input byte generates an output of two encoded bytes: this means that
+our encoded output file will be twice bigger than the input one.
 
 #### Decoding
 
-We will process the file we want to decode 2 byte per 2 byte.
+Since coding a byte leads to getting two encoded byte, the consequence is that we
+will need to process the file we want to decode 2 byte per 2 byte in order to
+get one decoded byte.
 
-The first step is to find our identity matrix in our G4C matrix columns
-:
+The first step is to find the identity matrix in our G4C matrix columns:
 
 |                                    1234 5678                                     | :arrow_right: |                     5234                     |
 |:--------------------------------------------------------------------------------:|:-------------:|:--------------------------------------------:|
 | 1**000** **1**111<br>1**100** **0**111<br>1**010** **0**100<br>1**001** **0**010 | :arrow_right: | **1**000<br>0**1**00<br>00**1**0<br>000**1** |
 
-Once we got the position of the column **(5234)** we save it.  
-We take the previously encoded byte `0010 1011 0101 0101`.  
-For each byte, we take the four bits corresponding to the columns we
-saved :
+Once we've identified the identity columns, we save their position: here, it's **(5-2-3-4)**.  
+Back to our previously encoded byte that generated these two bytes: `00101011 01010101`.
+For each of these two encoded bytes, we will select the bits located at the 5th, 2nd, 3rd and 4th position,
+and then concatenate them to get back to a 8-bits decoded byte.
 
 |   1234 5678   | :arrow_right: |   5234   |
 |:-------------:|:-------------:|:--------:|
 | 0**010 1**011 | :arrow_right: | **1010** |
 | 0**101 0**101 | :arrow_right: | **0101** |
 
-Et voilà !  
-We decoded these two byte and recovered our original one : `1010 0101`
+And voilà!  
+We've just decoded these two bytes and recovered our original one: `1010 0101`
 
 
 ## Usage
 
-The program GUI is pretty simple to understand :
+The program GUI is pretty simple to understand:
 
 ![image_01.png](pictures/image_01.png)
 
-### Load G4C Matrix
+### Load the G4C Matrix
 
 First of all, you need to load your G4C matrix text file.  
-:warning: Your key must be in this format : `G4C=[10001111 11000111
+:warning: Your key must be in this format: `G4C=[10001111 11000111
 10100100 10010010]`, otherwise it won't work.
 
 ![image_04.png](pictures/image_04.png)
 
-### Load file
+### Load the file
 
-Then, you can choose the file you want to encode / decode
+Then, choose the file you want to encode or decode:
 
 ![image_02.png](pictures/image_02.png)
 
 
-### Start encode
+### Start encoding
 
-Press the **Encode** button (no kidding ! :upside_down_face:).  
+Press the **Encode** button (no kidding! :upside_down_face:).  
 The program interface will freeze during the process but don't panic,
 it's working.
 
 ![image_08.png](pictures/image_08.png)
 
-The encoded file is saved on the same location than the original one,
-and it has **e** letter added at the end of the file
+The encoded file is saved in the same folder than the original one,
+and the letter **e** (for "encoded") is added at the end of the file extension.
 
 ![image_11.png](pictures/image_11.png)
 
-### Start decode
+### Start decoding
 
-Press the **Decode** button (haha again no kidding !
-:upside_down_face:).  
+Press the **Decode** button (haha again, no kidding! :upside_down_face:).  
 The program interface will freeze during the process but don't panic,
 it's working.
 
 ![image_05.png](pictures/image_05.png)
 
-The decoded file is saved on the same location than the original one,
-and it has **d** letter added at the end of the file
+The decoded file is saved in the same folder than the original one,
+and the letter **d** (for "decoded") is added at the end of the file extension.
 
 ![image_10.png](pictures/image_10.png)
 
 ### Warning :warning: :warning: :warning: !!!
 
-In both case, you will need to have mingw installed with gtk+3.20 at
-least.  
-I didn't figured out yet how to compile it in static in all-in-one
-executable file...
+In both cases, you will need to have MinGW installed with GTK+3.20 at least.  
+I didn't figured out how to compile it in static in all-in-one
+executable file yet...
 
-#### Using [msys2](https://www.msys2.org/) :
+#### Using [msys2](https://www.msys2.org/)
 
 Here's the command to execute inside [msys2](https://www.msys2.org/) to
-be able to compile this project :
+be able to compile this project:
 
 ```bash
 pacman -Syu
@@ -165,25 +160,25 @@ pacman -S mingw-w64-x86_64-gtk3
 ```
 
 Then, you need to link the `msys2/mingw64/bin` folder to your `system
-environment variable PATH`
+environment variable PATH`.
 
 During the build, if some libraries are not found, go to the folder
-`msys2/mingw64/include` and copy them outside of there *version folder*:  
-**Exemple :** copy **gtk** and **gdk** folder inside
+`msys2/mingw64/include` and copy them outside of the *version folder*:  
+**Exemple:** copy **gtk** and **gdk** folder inside
 `msys2/mingw64/include/gtk-3-0/` directly inside
 `msys2/mingw64/include/`
 
-## Code
+## Code: how the program works
 
 ### Loading key
 
-First of all, we need to load our key, otherwise the program won't start
-encoding / decoding process.  
+First of all, we need to load our key otherwise the program won't start
+the encoding / decoding process.  
 The key must be in valid format, we will store it in a local array `char
 codecKey[4][8]`.
 
-Function `int readKey(const char *path)` in `codecFunction.c` open the
-key text file first check valid format of the key :
+The function `int readKey(const char *path)` in `codecFunction.c` opens the
+key text file and first checks the valid format of the key:
 
 ```c
 int readKey(const char *path) {
@@ -201,7 +196,7 @@ int readKey(const char *path) {
     if (strlen(c1) != 8 || strlen(c2) != 8 || strlen(c3) != 8 || strlen(c4) != 8)
 ```
 
-Then, it store the key in our `codecKey[4][8]` array :
+Then, it stores the key in our `codecKey[4][8]` array:
 
 ```c
     for (i = 0; i < 8; ++i) {
@@ -216,19 +211,19 @@ Then, it store the key in our `codecKey[4][8]` array :
 }
 ```
 
-### Fill encoding matrix table
+### Fill the encoding matrix table
 
-During the encoding process, we don't want to process each bytes with
+During the encoding process, we don't want to process each byte of the file with the
 [encoding](#encoding) method.  
-If we think about it, there is only 256 bytes, each input byte give two
-at output.  
-So we will fill a local array `unsigned char encodeMatrix[256][2]` with
+If we think about it, there are only 256 possible values for a byte (0 to 255), and each
+input byte will give two encoded bytes in the output.  
+So, to speed the process, we will fill a local array `unsigned char encodeMatrix[256][2]` with
 all the possibilities.  
-Then in our encoding process, we just access the right index of the
-array, wich is the value of the byte !
+Then, in our encoding process, we just access the correct index of the
+array which is the value of the byte!
 
-Function `int fillMatrixEncode()` in `codecFunction.c` will process the
-256 * 2 bytes possibilities depending of the key:
+The function `int fillMatrixEncode()` in `codecFunction.c` will process the
+256 * 2 bytes possibilities depending on the key:
 
 ```c
 int fillMatrixEncode() {
@@ -250,22 +245,25 @@ int fillMatrixEncode() {
 ```
 
 As we see, we process with a XOR function because a matrix product
-between bits is the same as if we do XOR on these.
+between bits is the same as XOR.
+
+This `int fillMatrixEncode()` function is called as soon as a key is selected
+to speed.
 
 ### Fill decoding matrix table
 
-During the decoding process, we don't want to process each bytes with
-[decoding](#decoding) method.  
-If we think about it, there is only 256 * 256 combination of bytes when
-we process these two by two.  
-So we will fill a local array `unsigned char decodeMatrix[256][256]`
-with all the possibilities.  
-Then in our decoding process, we just access the right index of the
-array, wich is the value of the first byte for the first array
-dimension, then the second one for the second dimension !
+As for the encoding process, we don't want to process each byte of the file with the
+[decoding](#decoding) method during the decoding process.  
+If we think about it, there are only 256 * 256 possible two-byte combinations: to speed
+the process, we fill a local array `unsigned char decodeMatrix[256][256]` with all
+the possibilities.  
+Then, during the decoding process, we just access the correct index of the first
+dimension of the array, which is the value of the first byte, then
+the correct index of the second dimension of the array, which is the value of
+the second byte!
 
-Function `int fillMatrixDecode()` in `codecFunction.c` will process the
-256 * 256 bytes possibilities depending of the key:
+The function `int fillMatrixDecode()` in `codecFunction.c` will process the
+256 * 256 bytes possibilities depending on the key:
 
 ```c
 int fillMatrixDecode() {
@@ -280,7 +278,7 @@ int fillMatrixDecode() {
         }
         i4[4] = '\0';
 
-        if (i4[0] == 1 && i4[1] == 0 && i4[2] == 0 && i4[3] == 0)
+        if (i4[0] == 1 && i4[1] == 0 && i4[2] == 0 && i4[3] == 0) 
             matrixI4[0] = i;
         else if (i4[0] == 0 && i4[1] == 1 && i4[2] == 0 && i4[3] == 0)
             matrixI4[1] = i;
@@ -291,9 +289,9 @@ int fillMatrixDecode() {
     }
 ```
 
-As we say in [decoding](#decoding), the first step is to find our
+As explained in the [decoding](#decoding) theoretical section, the first step is to find our
 identity matrix in our G4C matrix columns. Once we have it, we can
-continue :
+continue:
 
 ```c
     for (i = 0; i < 256; i++) {
@@ -314,15 +312,16 @@ continue :
 As we see, wee fill our two dimensional array with all the
 possibilities, depending of our identity matrix.
 
-### File encode process
+### File encoding process
 
-For this part, I will just describe the part where we read / write
+For this part, we will just focus on the part where we read / write
 bytes, the rest of the function is just classic file processing.  
-Function `int encode()` in `codecFunction.c` will open file, create
-encode file and fill it with encoded bytes.  
-Treatments is faster when we do it in memory, so we will use 4
-differents buffer size, depending of the file size (10MB, 1MB, 1KB, 1B).
-Each buffer has the same working process so let's see one of them :
+The function `int encode()` in `codecFunction.c` will open the source file, create
+the encoded destination file and fill it with encoded bytes.  
+
+The treatment is faster if done in memory, so we will use 4
+different buffer sizes, depending on the file size (10MB, 1MB, 1KB, 1B).
+Each buffer has the same working process so let's see one of them:
 
 ```c
 int encode() {
@@ -351,14 +350,16 @@ int encode() {
     }
 ```
 
-`size2` is at the beginning the source file size, and we decrement it
-every time we process the file, it allow us to know how many bytes left
-to process. `readBuffer` array contain the bytes we read from source
-file, `writeBuffer` array will contain the encoded bytes, his size is 2x
-`readBuffer` size.  
-To fill `writeBuffer`, we use 2 threads, each one fill the `writeBuffer`
-array with the first and second encoded byte from the source one.  
-It call's worker for that, this function look like this :
+When initialized, `size2` is the size of the source file and will be decremented
+every time we process the file: this allows us to know how many bytes are left
+to process. The `readBuffer` array contains the bytes we read from the source
+file, and the `writeBuffer` array will contain the encoded bytes: as a source byte
+generates two encoded bytes, it will be twice bigger as the `readBuffer` size.
+
+To fill `writeBuffer`, we use two threads: the first one fills the `writeBuffer`
+array with the first encoded byte, and the second one fills it with the second
+encoded byte.
+Each of these threads calls a `worker` function:
 
 ```c
 void *worker1() {
@@ -376,19 +377,23 @@ void *worker2() {
 }
 ```
 
-Once we processed all bytes, we just free buffers and close source and
-destination file.
+Once all of the bytes are processed, we just free the buffers and close the source and
+destination files.
 
 
-### File decode process
+### File decoding process
 
-For this part, I will just describe the part where we read / write
+As for the file encoding process, we will just focus on the part where we read / write
 bytes, the rest of the function is just classic file processing.  
-Function `int decode()` in `codecFunction.c` will open file, create
-decode file and fill it with decoded bytes.  
-Treatments is faster when we do it in memory, so we will use 4
-differents buffer size, depending of the file size (20MB, 2MB, 2KB, 2B).
-Each buffer has the same working process so let's see one of them :
+The function `int decode()` in `codecFunction.c` will open the encoded source file,
+create the decoded destination file and fill it with decoded bytes.  
+
+Once again, the treatment is faster when done in memory, so we will use 4
+different buffer sizes, depending on the file size (20MB, 2MB, 2KB, 2B: these values
+are twice bigger as the encoding buffer sizes since two encoded bytes are
+necessary to get a decoded byte).
+
+Each buffer has the same working process so let's see one of them:
 
 ```c
     if (size2 > 20971520) {
@@ -410,32 +415,37 @@ Each buffer has the same working process so let's see one of them :
     }
 ```
 
-`size2` is at the beginning the source file size, and we decrement it
-every time we process the file, it allow us to know how many bytes left
-to process. `readBuffer` array contain the bytes we read from source
-file, `writeBuffer` array will contain the decode bytes, his size is
-half `readBuffer` size.  
-To fill `writeBuffer`, we just use readBuffer bytes two by two and use
-them as index of our `decodeMatrix`.  
-Once we processed all bytes, we just free buffers and close source and
-destination file.
+When initialized, `size2` is the size of the source file and will be decremented
+every time we process the file: this allows us to know how many bytes are left
+to process. The `readBuffer` array contains the bytes we read from the source
+file, and the `writeBuffer` array will contain the decoded bytes: it will be 
+half the size of `readBuffer`.  
+
+To fill `writeBuffer`, we just read the `readBuffer` bytes two by two and use
+them as index of our `decodeMatrix`.
+
+Once all of the bytes are processed, we just free the buffers and close the source and
+destination files.
 
 ### Cross compile issue fix
 
-If we want to compile on both Linux and Windows system, we have an issue
-with `fseek() ftell()` functions.  
-I use these functions to determine the size of my file but on Windows,
-`ftell()` only return `int` type value.  
-So if my file size is higher than `2147483647 bytes` (`~ 2.14 GB`), it
-will return -1 on `size_t size`, which is unsigned type. That will cause
-size to take his max value -1.  
-This problem is not present on Linux system because `ftell()` return
-`long` type value, which is enough.  
-To fix this problem on Windows, we can use `_fseeki64() _ftelli64()`
-functions from mingw which return `long long` type value. But these
-functions are not present on Linux.  
-That's why we use compilation macro to determine on which System we are
-and which functions to use :
+If we want to compile on both Linux and Windows, we have an issue
+with the `fseek()` and `ftell()` functions that are used to determine the size
+of the source file.
+
+Indeed, on Windows, `ftell()` only returns and `int` type value: if the
+source file size is higher than `2 147 483 647 bytes` (`~ 2.14 GB`), it
+will return `-1` on `size_t size`, which is `unsigned` type.  This problem is not
+present on Linux because `ftell()` returns a `long` type value, which is enough.  
+
+
+To fix this problem on Windows, we can use the `_fseeki64()` and `_ftelli64()`
+functions from MinGW that return a `long long` type value, but these
+functions are not available on Linux. 
+
+ 
+The solution is to use a compilation macro to determine the system that is running the 
+program and which functions should be used:
 
 ```c
 #ifdef _WIN64
@@ -453,8 +463,8 @@ and which functions to use :
 
 ## Contributing
 
-If someone has the idea and know how to compile in static with GTK and
-stuffs to be dependence free, be my guest !
+If someone has an idea on how to compile in static with GTK or
+stuffs to be dependence free, be my guest!
 
 ## Authors
 
