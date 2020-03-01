@@ -9,7 +9,7 @@
 
 - [Description](#description)
   - [Features](#features)
-  - [How it works; the theory](#how-it-works-the-theory)
+  - [How it works: the theory](#how-it-works-the-theory)
     - [Encoding](#encoding)
     - [Decoding](#decoding)
 - [Usage](#usage)
