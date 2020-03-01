@@ -9,7 +9,7 @@ size_t readBufferSize;
 unsigned char *writeBuffer = NULL;
 size_t writeBufferSize;
 
-// Read key from file and fille the codecKey[4][8] array
+// Read key from file and fill the codecKey[4][8] array
 int readKey(const char *path) {
     int i;
     char c1[9], c2[9], c3[9], c4[9];
@@ -22,7 +22,6 @@ int readKey(const char *path) {
     }
 
     // Fill the string values
-    // TODO: pourquoi %[01] ?
     if (fscanf(fp, "G4C=[%[01] %[01] %[01] %[01]]", c1, c2, c3, c4) != 4) {
         updateStatus("Incorrect key file!");
         fclose(fp);
@@ -46,24 +45,20 @@ int readKey(const char *path) {
 
     fclose(fp);
 
-    // Fill the encode and decode matrices
+    // Fill the encode and decode matrices with the key
     return fillMatrixEncode() || fillMatrixDecode();
 }
 
 // Fill encodeMatrix[256][2] with all the possibilities
-// TODO: possibilities
 int fillMatrixEncode() {
     char array1[8], array2[8];
     int i, j;
 
     for (i = 0; i < 256; ++i) {
-        //c2b[i];
         // XOR, equivalent to a matrix product
         for (j = 0; j < 8; ++j) {
-            array1[j] = (c2b[i][0] && codecKey[0][j]) ^ (c2b[i][1] && codecKey[1][j]) ^ (c2b[i][2] && codecKey[2][j]) ^
-                        (c2b[i][3] && codecKey[3][j]);
-            array2[j] = (c2b[i][4] && codecKey[0][j]) ^ (c2b[i][5] && codecKey[1][j]) ^ (c2b[i][6] && codecKey[2][j]) ^
-                        (c2b[i][7] && codecKey[3][j]);
+            array1[j] = (c2b[i][0] && codecKey[0][j]) ^ (c2b[i][1] && codecKey[1][j]) ^ (c2b[i][2] && codecKey[2][j]) ^ (c2b[i][3] && codecKey[3][j]);
+            array2[j] = (c2b[i][4] && codecKey[0][j]) ^ (c2b[i][5] && codecKey[1][j]) ^ (c2b[i][6] && codecKey[2][j]) ^ (c2b[i][7] && codecKey[3][j]);
         }
         encodeMatrix[i][0] = b2C(array1);
         encodeMatrix[i][1] = b2C(array2);
@@ -72,13 +67,14 @@ int fillMatrixEncode() {
     return 0;
 }
 
-// Fill decodeMatrix[256][2] with all the possibilities
+// Fill decodeMatrix[256][2]
 int fillMatrixDecode() {
     setSpinnerStatus(TRUE);
     levelBarSetValue(0.);
     int i, j, k;
     char i4[5], matrixI4[4], byte[8];
 
+    // Looking for identity matrix
     for (i = 0; i < 8; i++) {
         for (j = 0; j < 4; j++) {
             i4[j] = codecKey[j][i];
@@ -95,6 +91,7 @@ int fillMatrixDecode() {
             matrixI4[3] = i;
     }
 
+    // Decode
     for (i = 0; i < 256; i++) {
         for (j = 0; j < 256; j++) {
             for (k = 0; k < 4; k++) {
@@ -145,23 +142,25 @@ int encode() {
         return 1;
     }
 
-#ifdef _WIN64
-    assert(!_fseeki64(fp, 0, SEEK_END));
-    size_t size = _ftelli64(fp);
-    assert(!_fseeki64(fp, 0, SEEK_SET));
-#elif __linux__
-    assert(!fseek(fp, 0, SEEK_END));
-    size_t size = ftell(fp);
-    assert(!fseek(fp, 0, SEEK_SET));
-#else
-#error You need to compile on Linux or Windows 64bits
-#endif
-    size_t size2 = size;
-    pthread_t threads[2];
-    readBuffer = malloc(1);
+    // Get size of file, method depending on the OS
+    #ifdef _WIN64
+        assert(!_fseeki64(fp, 0, SEEK_END));
+        size_t size = _ftelli64(fp);
+        assert(!_fseeki64(fp, 0, SEEK_SET));
+    #elif __linux__
+        assert(!fseek(fp, 0, SEEK_END));
+        size_t size = ftell(fp);
+        assert(!fseek(fp, 0, SEEK_SET));
+    #else
+    #error You need to compile on Linux or Windows 64bits
+    #endif
+
+    size_t size2 = size; // size2: cursor from end to beginning
+    pthread_t threads[2]; // create 2 threads
+    readBuffer = malloc(1); // init buffer
     writeBuffer = malloc(1);
 
-    if (size2 >= 10485760) {
+    if (size2 >= 10485760) { // 10 Mo
         readBufferSize = 10485760;
         writeBufferSize = readBufferSize * 2;
         readBuffer = malloc(readBufferSize);
@@ -182,7 +181,7 @@ int encode() {
 
     }
 
-    if (size2 >= 1048576) {
+    if (size2 >= 1048576) { // 1Mo
         readBufferSize = 1048576;
         writeBufferSize = readBufferSize * 2;
         readBuffer = realloc(readBuffer, readBufferSize);
@@ -239,6 +238,8 @@ int encode() {
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     fileSize fileSize1 = readableFileSize(size);
+
+// Get size of destination file, method depending on the OS
 #ifdef _WIN64
     fileSize fileSize2 = readableFileSize(_ftelli64(dest));
 #elif __linux__
@@ -247,7 +248,7 @@ int encode() {
 #error You need to compile on Linux or Windows 64bits
 #endif
     char message[255];
-    sprintf(message, "File encoded ! Encoding time: %lf seconds, source size : %.2lf %s, dest size : %.2lf %s",
+    sprintf(message, "File encoded! Encoding time: %lf seconds, source size: %.2lf %s, dest size: %.2lf %s",
             cpu_time_used,
             fileSize1.size, fileSize1.unit, fileSize2.size, fileSize2.unit);
     updateStatus(message);

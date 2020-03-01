@@ -9,23 +9,23 @@
 
 - [Description](#description)
   - [Features](#features)
-  - [How it works](#how-it-works)
+  - [How it works; the theory](#how-it-works-the-theory)
     - [Encoding](#encoding)
     - [Decoding](#decoding)
 - [Usage](#usage)
-  - [Load G4C Matrix](#load-g4c-matrix)
-  - [Load file](#load-file)
-  - [Start encode](#start-encode)
-  - [Start decode](#start-decode)
+  - [Load the G4C Matrix](#load-the-g4c-matrix)
+  - [Load the file](#load-the-file)
+  - [Start the encoding process](#start-the-encoding-process)
+  - [Start the decoding process](#start-the-decoding-process)
   - [Warning :warning: :warning: :warning: !!!](#warning----)
     - [Using msys2](#using-msys2-)
-- [Code](#code)
-  - [Loading key](#loading-key)
-  - [Fill encoding matrix table](#fill-encoding-matrix-table)
-  - [Fill decoding matrix table](#fill-decoding-matrix-table)
-  - [File encode process](#file-encode-process)
-  - [File decode process](#file-decode-process)
-  - [Cross compile issue fix](#cross-compile-issue-fix)
+- [Code: how the program works](#code-how-the-program-works)
+  - [Loading the key](#loading-the-key)
+  - [Fill the encoding matrix table](#fill-the-encoding-matrix-table)
+  - [Fill the decoding matrix table](#fill-the-decoding-matrix-table)
+  - [File encoding process](#file-encoding-process)
+  - [File decoding process](#file-decoding-process)
+  - [Fixing the cross-compilation issue](#fixing-the-cross-compilation-issue)
 - [Contributing](#contributing)
 - [Authors](#authors)
 
@@ -116,7 +116,7 @@ Then, choose the file you want to encode or decode:
 ![image_02.png](pictures/image_02.png)
 
 
-### Start encoding
+### Start the encoding process
 
 Press the **Encode** button (no kidding! :upside_down_face:).  
 The program interface will freeze during the process but don't panic,
@@ -129,7 +129,7 @@ and the letter **e** (for "encoded") is added at the end of the file extension.
 
 ![image_11.png](pictures/image_11.png)
 
-### Start decoding
+### Start the decoding process
 
 Press the **Decode** button (haha again, no kidding! :upside_down_face:).  
 The program interface will freeze during the process but don't panic,
@@ -424,7 +424,7 @@ them as index of our `decodeMatrix`.
 Once all of the bytes are processed, we just free the buffers and close the source and
 destination files.
 
-### Cross compile issue fix
+### Fixing the cross-compilation issue
 
 If we want to compile on both Linux and Windows, we have an issue
 with the `fseek()` and `ftell()` functions that are used to determine the size
